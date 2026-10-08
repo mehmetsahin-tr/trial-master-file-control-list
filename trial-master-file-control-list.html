@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trial Master File Control List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f4ee; --card:#fffefb; --soft:#faf9f5; --ink:#141413; --ink2:#3d3d3a; --muted:#73726c;
+    --line:#e6e3d9; --line2:#efede5; --accent:#c96442; --accent-soft:#f6e6de;
+    --ok:#4b7a3e; --ok-soft:#eaf1e4;
+    --serif:"Source Serif 4","Tiempos Text",Georgia,"Times New Roman",serif;
+    --sans:"Inter","Styrene B",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#262624;--card:#30302e;--soft:#2b2b29;--ink:#faf9f5;--ink2:#e5e3da;--muted:#a3a198;
+      --line:#45443f;--line2:#3a3936;--accent:#d97757;--accent-soft:#4a3329;--ok:#8fbf7f;--ok-soft:#33402d}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+  h1,h2{font-family:var(--serif);font-weight:500;letter-spacing:-.01em}
+  header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:16px 20px 12px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 12px}
+  input,select,textarea,button{font:inherit;color:inherit}
+  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+  .meta label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+  .field,input[type=search],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .field:disabled{background:transparent;border-color:transparent;padding-left:0;color:var(--ink);opacity:1;-webkit-text-fill-color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .meta-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:10px 0 12px;font-size:13px;color:var(--muted)}
+  .stats{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+  .pill{padding:3px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--ink2)}
+  .pill.ok{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+  .bar{flex:1;min-width:140px;height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+  #pct{font-family:var(--serif);font-size:18px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+  .controls select{width:auto}.controls input[type=search]{width:220px}
+  .btn{padding:7px 14px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:14px}
+  .btn:hover{border-color:var(--muted)}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .btn.sm{padding:4px 10px;font-size:12px;border-radius:6px}
+  .link{border:0;background:none;padding:0 2px;cursor:pointer;font-size:12px;color:var(--accent)}
+  .link.muted{color:var(--muted)}
+  main{padding:18px 20px 60px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  section.verified{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+  section > h2{margin:0;font-size:17px;padding:12px 16px;background:var(--soft);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .right{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted)}
+  .sec-check{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:13px;color:var(--ink2)}
+  .sec-check .box{width:15px;height:15px;border:1.5px solid var(--muted);border-radius:4px;display:inline-grid;place-items:center;font-size:11px;line-height:1}
+  .sec-check.on{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+  .sec-check.on .box{background:var(--ok);border-color:var(--ok);color:#fff}
+  .row{display:grid;grid-template-columns:64px 1fr 260px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line2);align-items:start}
+  .row:last-child{border-bottom:0}
+  .row.complete{background:color-mix(in srgb,var(--ok-soft) 45%,transparent)}
+  .row.na .name{color:var(--muted)}
+  .code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;color:var(--muted);padding-top:3px}
+  .name{font-family:var(--serif);font-size:16px;color:var(--ink)}
+  .name-line{display:flex;gap:8px;align-items:center}
+  .name-edit{flex:1;font-family:var(--serif);font-size:16px;padding:3px 8px;border:1px dashed var(--line);border-radius:6px;background:transparent}
+  .files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+  .file{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 4px 3px 9px;border:1px solid var(--line);border-radius:6px;background:var(--soft);max-width:100%}
+  .file a{color:var(--ink2);text-decoration:none;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+  .file a:hover{color:var(--accent)}
+  .file .ext{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase}
+  .file button{border:0;background:none;cursor:pointer;color:var(--muted);padding:0 5px;font-size:14px;line-height:1}
+  .attach{font-size:12px;color:var(--muted);border:1px dashed var(--line);background:none;border-radius:6px;padding:3px 9px;cursor:pointer}
+  .attach:hover{color:var(--accent);border-color:var(--accent)}
+  .ctl{display:flex;flex-direction:column;gap:6px}
+  .ctl select{padding:5px 8px;font-size:13px}
+  .row.complete .ctl select{border-color:color-mix(in srgb,var(--ok) 50%,var(--line));color:var(--ok)}
+  .cm-edit{display:flex;gap:6px}
+  .cm-edit input{flex:1;min-width:0;padding:5px 8px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+  .cm{font-size:13px;color:var(--ink2);background:var(--soft);border:1px solid var(--line2);border-radius:6px;padding:5px 8px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .cm span{white-space:pre-wrap;word-break:break-word}
+  .row.pending .ctl select{color:var(--muted)}
+  .row.pending .ctl select option{color:var(--ink)}
+  .row.locked select:disabled{opacity:1;cursor:not-allowed;background:transparent}
+  .name-edit:disabled{border-color:transparent;padding-left:0;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+  .sec-check.static{cursor:default}
+  .sec-foot{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:10px 16px;background:var(--soft);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  section.verified .sec-foot{background:color-mix(in srgb,var(--ok-soft) 60%,var(--soft))}
+  .add-row{padding:10px 16px;border-bottom:1px solid var(--line2)}
+  .empty{padding:28px;text-align:center;color:var(--muted)}
+  .sign{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:18px}
+  .sign h2{font-size:17px;margin:0 0 10px}
+  .notes-view{white-space:pre-wrap;background:var(--soft);border:1px solid var(--line2);border-radius:8px;padding:10px;font-size:14px;min-height:40px}
+  .notes-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+  @media (max-width:700px){.row{grid-template-columns:1fr}.code{padding:0}.controls input[type=search]{width:100%}}
+
+  /* ---------- print ---------- */
+  #print{display:none}
+  @page{size:A4;margin:14mm 12mm 16mm 12mm;
+    @bottom-right{content:"Page " counter(page) " of " counter(pages);font:8pt Georgia,serif;color:#555}
+    @bottom-left{content:"CONFIDENTIAL";font:8pt Georgia,serif;color:#555}}
+  @media print{
+    body{background:#fff;color:#000;font:9.5pt/1.4 var(--serif)}
+    body > header, body > main{display:none!important}
+    #print{display:block}
+    .p-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5pt solid #000;padding-bottom:4pt;margin-bottom:8pt}
+    .p-title{font-size:15pt;font-weight:600}
+    .p-sub{font-size:8.5pt;color:#444}
+    table.p{width:100%;border-collapse:collapse;margin-bottom:8pt}
+    table.p th,table.p td{border:.6pt solid #888;padding:3pt 5pt;vertical-align:top;text-align:left}
+    table.p th{background:#efefef;font-weight:600;font-size:8.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    table.p thead{display:table-header-group}
+    table.p tr{break-inside:avoid;page-break-inside:avoid}
+    .p-meta td.k{width:15%;background:#f6f6f6;font-weight:600;font-size:8.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .p-meta td.v{width:35%}
+    .p-sum{font-size:8.5pt;margin:0 0 8pt}
+    .p-sec td{background:#e6e6e6;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .p-sec .chk{float:right;font-weight:400;font-size:8.5pt}
+    .p-code{font-family:"SF Mono",Menlo,monospace;font-size:8pt;white-space:nowrap}
+    .p-st{font-size:8.5pt;white-space:nowrap}
+    .p-st.complete{font-weight:600}
+    .p-cm{white-space:pre-wrap;word-break:break-word}
+    .p-files{font-size:8pt;word-break:break-all}
+    .p-block{break-inside:avoid;page-break-inside:avoid;margin-top:10pt}
+    .p-block h3{font-size:10.5pt;margin:0 0 4pt}
+    .p-notes{border:.6pt solid #888;padding:5pt;min-height:40pt;white-space:pre-wrap}
+    .p-sign td{height:28pt}
+  }
+</style>
+</head>
+<body>
+<header>
+ <div class="wrap">
+  <h1>Trial Master File Control List</h1>
+  <div class="meta">
+    <div><label>Study title</label><input class="field" data-meta="study" placeholder="Study title / code"></div>
+    <div><label>Protocol no.</label><input class="field" data-meta="protocol" placeholder="Protocol number"></div>
+    <div><label>Site code</label><input class="field" data-meta="clinic" placeholder="Site code"></div>
+    <div><label>Reviewed by</label><input class="field" data-meta="controller" placeholder="Full name"></div>
+    <div><label>Review start</label><input class="field" type="date" data-meta="start"></div>
+    <div><label>Review end</label><input class="field" type="date" data-meta="end"></div>
+  </div>
+  <div class="meta-actions"><span id="metaStatus"></span><button class="btn sm" id="metaBtn"></button></div>
+  <div class="stats">
+    <span class="pill" id="pTotal"></span>
+    <span class="pill ok" id="pOk"></span>
+    <span class="pill" id="pMiss"></span>
+    <span class="pill" id="pPend"></span>
+    <span class="pill" id="pNa"></span>
+    <span class="pill" id="pSec"></span>
+    <div class="bar"><i id="bar"></i></div>
+    <span id="pct">0%</span>
+  </div>
+  <div class="controls">
+    <select id="filter">
+      <option value="all">All documents</option>
+      <option value="pending">Not selected only</option>
+      <option value="missing">Missing only</option>
+      <option value="complete">Complete only</option>
+      <option value="na">N/A only</option>
+    </select>
+    <input type="search" id="q" placeholder="Search by code or name…">
+    <button class="btn" id="exportBtn">Export</button>
+    <button class="btn" id="importBtn">Import</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <button class="btn" id="printBtn">Print</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+ </div>
+</header>
+
+<main class="wrap">
+  <div id="list"></div>
+  <div class="sign">
+    <h2>General comments</h2>
+    <div id="notesBox"></div>
+  </div>
+  <p class="note" id="storageNote">Data and attached files are stored only in this browser. Use Export to move a review to another device.</p>
+</main>
+
+<div id="print"></div>
+
+<script>
+const KEY = 'tmf-be-ba-checklist-v2';
+const ACCEPT = ['pdf','docx'];
+
+const GROUPS = [
+ ["C","Cover"],
+ ["1","1 · Correspondence"],
+ ["2","2 · Investigator's Brochure"],
+ ["3","3 · Protocol, Amendments and CRF"],
+ ["4","4 · Information Given to Trial Subjects"],
+ ["5","5 · Financial Aspects"],
+ ["6","6 · Insurance"],
+ ["7","7 · Agreements"],
+ ["8","8 · Ethics Committee and Regulatory Approvals"],
+ ["9","9 · Investigator and Staff Qualifications"],
+ ["10","10 · Medical / Laboratory Procedures"],
+ ["11","11 · Investigational Medicinal Products (IMP)"],
+ ["12","12 · Monitoring / Inspection / Audit"],
+ ["13","13 · Signed Informed Consent Forms"],
+ ["14","14 · Source Documents and Quality Control Forms"],
+ ["15","15 · Case Report Forms (CRF)"],
+ ["16","16 · Safety Information"],
+ ["17","17 · Screening Log and Subject Identification"],
+ ["18","18 · IMP Accountability at Site"],
+ ["19","19 · Biological Samples"],
+ ["20","20 · Clinical Study Report"]
+];
+
+// [group, code, name, editableName, userAdded]
+const BASE = [
+ ["C","C-1","Contact List"],
+ ["1","1","Correspondence"],
+ ["2","2","Investigator's Brochure"],
+ ["3","3.1","Signed Protocol"],
+ ["3","3.2","Protocol Amendments"],
+ ["3","3.2a","Note to File"],
+ ["3","3.2b","Protocol Deviation Report"],
+ ["3","3.2c","Protocol Deviations Tracking List"],
+ ["3","3.3","Blank CRF"],
+ ["4","4.1","Sample ICFs (local language and English)"],
+ ["4","4.2","Other Written Information or Advertisements for Subjects"],
+ ["5","5.1","Research Budget"],
+ ["5","5.2","Subject Payments List"],
+ ["6","6","Insurance"],
+ ["7","7.1","Clinical Research Agreement"],
+ ["7","7.2","Confidentiality Agreement"],
+ ["8","8.1","Ethics Committee Approval"],
+ ["8","8.1a","Ethics Committee Termination Notification"],
+ ["8","8.2","Regulatory Authority (MoH) Approval"],
+ ["8","8.2a","Regulatory Authority (MoH) Termination Notification"],
+ ["8","8.3","Declaration of Helsinki"],
+ ["8","8.3a","GCP Certificate"],
+ ["8","8.3b","GMP Certificate (if applicable)"],
+ ["8","8.3c","GLP Certificate (if applicable)"],
+ ["8","8.3d","Legal Regulations"],
+ ["9","9.1","Investigator Declaration"],
+ ["9","9.1a","Signature Sheet and Delegation Log"],
+ ["9","9.2","Curricula Vitae (CVs)"],
+ ["10","10.1","Laboratory Reference Ranges"],
+ ["10","10.2","Laboratory Quality Certificates"],
+ ["11","11.1","IMP Sample Labels"],
+ ["11","11.2","IMP Receipt Record Form"],
+ ["11","11.2a","IMP Return Record Form"],
+ ["11","11.3","Certificates of Analysis"],
+ ["11","11.4","Blinding Documents"],
+ ["11","11.5","Randomization List and Raw Data"],
+ ["11","11.5a","Time Table"],
+ ["11","11.6","Other Materials and Instructions (preparation, administration)"],
+ ["11","11.6a","IMP Receipt Cargo Waybill"],
+ ["11","11.6b","Reference Product Supply Certificate"],
+ ["11","11.6c","IMP Control Form"],
+ ["11","11.6d","IMP Label Control Form"],
+ ["11","11.6e","IMP Dispensing Form"],
+ ["11","11.6f","IMP Transfer Temperature-Humidity Records"],
+ ["11","11.6g","IMP Release Declaration"],
+ ["11","11.6h","Other Documents and Forms"],
+ ["12","12.1","Monitoring Visit Form"],
+ ["12","12.2","Initiation Monitoring Report"],
+ ["13","13","Completed Informed Consent Forms"],
+ ["14","14.0","Source Data Identification and Location Log"],
+ ["14","14.a","Protocol Summary Form"],
+ ["14","14.b","Protocol Specific Criteria Tracking Form"],
+ ["14","14.c","Protocol Training Attendance List"],
+ ["14","14.d","Close-out Meeting Form"],
+ ["14","14.e","Subject Information Meeting Attendance List"],
+ ["14","14.f","BMI Calculation Form"],
+ ["14","14.g","Drug Screening, Nicotine and Alcohol Test Results Form"],
+ ["14","14.h","Sample Delivery Form"],
+ ["14","14.i","ECG Record Form"],
+ ["14","14.j","Blood Sampling Tubes and Labels Preparation and Control Form"],
+ ["14","14.k","Duty Log Book"],
+ ["14","14.l","Hospitalization Admission and Control Form"],
+ ["14","14.m","Vital Signs Monitoring Form"],
+ ["14","14.n","Nurse Call Tracking List"],
+ ["14","14.o","Meal Monitoring Form"],
+ ["14","14.p","Meal Ingredients Declaration"],
+ ["14","14.q","Subject Withdrawal Form"],
+ ["14","14.r","Subject Exclusion Form"],
+ ["14","14.s","Tabletop Cooler Temperature Monitoring Form"],
+ ["14","14.t","Toilet Tracking Form"],
+ ["14","14.u","Ambulatory Blood Sampling Registration Form"],
+ ["14","14.v","Concomitant Medication Tracking Form"],
+ ["14","14.w","Follow-up Examination Invitation and Tracking Form"],
+ ["14","14.x","Adverse Event Record Form"],
+ ["14","14.y","Equipment List for BA/BE Studies"],
+ ["14","14.z","IMP Delivery Forms"],
+ ["14","14.aa","Document Delivery Forms"],
+ ["14","14.ab","Other List / Form (1)", true],
+ ["14","14.ac","Other List / Form (2)", true],
+ ["14","14.ad","Study-Specific Internal Audit Form"],
+ ["15","15.1","Signed CRFs"],
+ ["15","15.2","CRF Check Form (site)"],
+ ["15","15.2a","Data Query Form (CRO)"],
+ ["16","16.1","Blank AE Form"],
+ ["16","16.1a","Blank SAE Form"],
+ ["16","16.2","SAE Reports and Notifications from Investigator to Sponsor"],
+ ["16","16.3","SUSARs and Other Safety Notifications and Reports"],
+ ["17","17.1","Screening Log"],
+ ["17","17.1a","Subject Identification Code List"],
+ ["18","18.1","IMP Accountability Log"],
+ ["18","18.2","IMP Box / Blister / Bottle Images"],
+ ["18","18.2a","IMP Images before Administration"],
+ ["18","18.2b","Drug Storage Room Temperature-Humidity Records"],
+ ["18","18.3","IMP Destruction Records"],
+ ["19","19.1","Laboratory Tracking Forms"],
+ ["19","19.1a","Plasma Label Samples"],
+ ["19","19.1b","Plasma Tubes and Labels Preparation and Control Form"],
+ ["19","19.1c","Hemolysis Detection and Tracking Form"],
+ ["19","19.1d","Bagging Control Form"],
+ ["19","19.2","Master Sample Handover Form"],
+ ["19","19.2a","Back-up Sample Handover Form"],
+ ["19","19.2b","Bill of Lading / Cargo Waybill"],
+ ["19","19.2c","Sample Shipment Images"],
+ ["19","19.2d","Shipment Data Logger Records"],
+ ["19","19.2e","Deep Freezer Temperature Records"],
+ ["19","19.2f","BMTF (if samples are shipped abroad)"],
+ ["19","19.3","Biological Material Destruction Documents"],
+ ["19","19.4","Laboratory Correspondence"],
+ ["20","20","Final Clinical Study Report"]
+];
+const ANCHOR = "14.ac";
+const LABEL = {pending:"Please select", missing:"Missing", complete:"Complete", na:"N/A"};
+
+/* ---------- state ---------- */
+let state = load();
+const EDIT = new Set(), DRAFT = {};
+let notesEditing = false, notesDraft = null;
+
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.items) return norm(s); } catch(e){}
+  return norm({});
+}
+function norm(s){ return {meta:{}, metaLocked:false, items:{}, sections:{}, custom:[], ...s}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+function allItems(){
+  const k = BASE.findIndex(i => i[1] === ANCHOR);
+  const extra = state.custom.map(c => ["14", c.id, "Other List / Form", true, true]);
+  return [...BASE.slice(0, k + 1), ...extra, ...BASE.slice(k + 1)];
+}
+function item(id){ return state.items[id] || (state.items[id] = {s:"pending"}); }
+function st(id){ return (state.items[id] && state.items[id].s) || "pending"; }
+function cm(id){ return (state.items[id] && state.items[id].c) || ""; }
+function nm(i){ return (i[3] && state.items[i[1]] && state.items[i[1]].n) || i[2]; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function groupItems(g){ return allItems().filter(i => i[0] === g); }
+function isLocked(g){ return !!(g && g !== "C" && state.sections[g] && state.sections[g].v); }
+function groupOf(id){ const i = allItems().find(x => x[1] === id); return i ? i[0] : null; }
+function logSec(sec, a){ (sec.log = sec.log || []).push({a, t:Date.now()}); }
+function editCount(sec){ return (sec.log || []).filter(l => l.a === "edited").length; }
+function secRecord(sec){
+  let r = "";
+  if (sec.v) r += " · checked " + fmt(sec.t);
+  const n = editCount(sec);
+  if (n) r += " · edited " + n + "× (last " + fmt(sec.e) + ")";
+  if (!sec.v && n) r += " · awaiting re-check";
+  return r;
+}
+let saveTimer; function saveSoon(){ clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); }
+function fmt(t){ return t ? new Date(t).toLocaleString() : ""; }
+function letters(n){ let s = ""; n++; while (n > 0) { n--; s = String.fromCharCode(97 + n % 26) + s; n = Math.floor(n / 26); } return s; }
+function newCustomId(){
+  const used = new Set(allItems().map(i => i[1]));
+  for (let n = 30; ; n++) { const id = "14." + letters(n); if (!used.has(id)) return id; }
+}
+
+/* ---------- attachments (IndexedDB) ---------- */
+let db = null, FILES = {};
+function openDB(){
+  return new Promise((res, rej) => {
+    if (!('indexedDB' in window)) return rej('no idb');
+    const r = indexedDB.open('tmf-be-ba-files', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files', {keyPath:'id', autoIncrement:true}).createIndex('item','itemId');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function store(mode){ return db.transaction('files', mode).objectStore('files'); }
+function P(r){ return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function loadFiles(){
+  FILES = {};
+  if (!db) return;
+  const all = await P(store('readonly').getAll());
+  all.forEach(f => (FILES[f.itemId] = FILES[f.itemId] || []).push({id:f.id, name:f.name}));
+}
+function extOf(n){ return (n.split('.').pop() || '').toLowerCase(); }
+async function addFiles(itemId, list){
+  if (!db) { alert("File storage is not available in this browser."); return; }
+  const bad = [];
+  for (const f of list){
+    if (!ACCEPT.includes(extOf(f.name))) { bad.push(f.name); continue; }
+    await P(store('readwrite').add({itemId, name:f.name, type:f.type, size:f.size, added:Date.now(), blob:f}));
+  }
+  if (bad.length) alert("Only .pdf and .docx files are accepted. Skipped:\n" + bad.join("\n"));
+  await loadFiles(); render();
+}
+async function openFile(id){
+  const rec = await P(store('readonly').get(id)); if (!rec) return;
+  const url = URL.createObjectURL(rec.blob);
+  if (extOf(rec.name) === 'pdf') window.open(url, '_blank');
+  else { const a = document.createElement('a'); a.href = url; a.download = rec.name; a.click(); }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function deleteFile(id, name){
+  if (!confirm(`Remove "${name}"?`)) return;
+  await P(store('readwrite').delete(id)); await loadFiles(); render();
+}
+
+/* ---------- header details ---------- */
+const metaFields = document.querySelectorAll("[data-meta]");
+function renderMeta(){
+  metaFields.forEach(el => { el.value = state.meta[el.dataset.meta] || ""; el.disabled = state.metaLocked; });
+  metaBtn.textContent = state.metaLocked ? "Edit details" : "Save details";
+  metaBtn.classList.toggle("primary", !state.metaLocked);
+  metaStatus.textContent = state.metaLocked && state.metaSaved ? "Saved " + fmt(state.metaSaved) : (state.metaLocked ? "" : "Unsaved changes are kept only after you save.");
+}
+metaBtn.addEventListener("click", () => {
+  if (state.metaLocked) { state.metaLocked = false; renderMeta(); metaFields[0].focus(); return; }
+  metaFields.forEach(el => state.meta[el.dataset.meta] = el.value.trim());
+  state.metaLocked = true; state.metaSaved = Date.now(); save(); renderMeta();
+});
+
+/* ---------- general notes ---------- */
+function renderNotes(){
+  const n = state.meta.notes || "";
+  if (n && !notesEditing) {
+    notesBox.innerHTML = `<div class="notes-view">${esc(n)}</div>
+      <div class="notes-actions"><button class="btn sm" id="notesEdit">Edit</button></div>`;
+  } else {
+    notesBox.innerHTML = `<textarea id="notesTa" rows="4" placeholder="Comments for the TMF…">${esc(notesDraft ?? n)}</textarea>
+      <div class="notes-actions">${n ? '<button class="btn sm" id="notesCancel">Cancel</button>' : ''}<button class="btn sm primary" id="notesSave">Save</button></div>`;
+  }
+}
+notesBox.addEventListener("input", e => { if (e.target.id === "notesTa") notesDraft = e.target.value; });
+notesBox.addEventListener("click", e => {
+  if (e.target.id === "notesEdit") { notesEditing = true; notesDraft = null; renderNotes(); }
+  if (e.target.id === "notesCancel") { notesEditing = false; notesDraft = null; renderNotes(); }
+  if (e.target.id === "notesSave") {
+    const v = (document.getElementById("notesTa").value || "").trim();
+    if (!v && !state.meta.notes) return;
+    if (!confirm(v ? "Do you confirm these comments?\n\n" + v : "Remove the general comments?")) return;
+    state.meta.notes = v; notesEditing = false; notesDraft = null; save(); renderNotes();
+  }
+});
+
+/* ---------- list ---------- */
+function renderStats(){
+  const items = allItems();
+  let ok=0, miss=0, na=0, pend=0;
+  items.forEach(i => { const s = st(i[1]); s==="complete"?ok++:s==="na"?na++:s==="missing"?miss++:pend++; });
+  const applicable = items.length - na;
+  const pct = applicable ? Math.round(ok / applicable * 100) : 0;
+  const secs = GROUPS.filter(g => g[0] !== "C");
+  const secDone = secs.filter(g => state.sections[g[0]] && state.sections[g[0]].v).length;
+  pTotal.textContent = `Total ${items.length}`;
+  pOk.textContent = `Complete ${ok}`;
+  pMiss.textContent = `Missing ${miss}`;
+  pPend.textContent = `Not selected ${pend}`;
+  pNa.textContent = `N/A ${na}`;
+  pSec.textContent = `Sections checked ${secDone}/${secs.length}`;
+  bar.style.width = pct + "%"; document.getElementById("pct").textContent = pct + "%";
+  return {items:items.length, ok, miss, na, pend, secDone, secs:secs.length};
+}
+
+function commentHTML(id, locked){
+  const c = cm(id);
+  if (locked) return c ? `<div class="cm"><span>${esc(c)}</span></div>` : "";
+  if (c && !EDIT.has(id)) {
+    return `<div class="cm"><span>${esc(c)}</span><button class="link" data-cedit="${esc(id)}">Edit</button></div>`;
+  }
+  const val = DRAFT[id] ?? c;
+  return `<div class="cm-edit"><input data-cid="${esc(id)}" placeholder="Comment / date" value="${esc(val)}">
+    <button class="btn sm" data-csave="${esc(id)}">Save</button>
+    ${c ? `<button class="link muted" data-ccancel="${esc(id)}">Cancel</button>` : ""}</div>`;
+}
+
+function render(){
+  const f = filter.value, q = document.getElementById("q").value.trim().toLowerCase();
+  const lastOther = state.custom.length ? state.custom[state.custom.length - 1].id : ANCHOR;
+  let html = "", shown = 0;
+  GROUPS.forEach(([g, title]) => {
+    const rows = groupItems(g);
+    const vis = rows.filter(i => {
+      const s = st(i[1]);
+      if (f !== "all" && s !== f) return false;
+      if (q && !(i[1] + " " + nm(i)).toLowerCase().includes(q)) return false;
+      return true;
+    });
+    if (!vis.length) return;
+    shown += vis.length;
+    const done = rows.filter(i => st(i[1]) !== "pending").length;
+    const sec = state.sections[g] || {};
+    const locked = isLocked(g);
+    const check = g === "C" ? "" : locked
+      ? `<span class="sec-check on static" title="Checked ${esc(fmt(sec.t))}"><span class="box">✓</span>Checked</span>
+         <button class="btn sm" data-secedit="${g}" title="Unlock this section for editing">Edit</button>`
+      : `<button class="sec-check" data-sec="${g}" title="Check and lock this section"><span class="box"></span>Check</button>`;
+    html += `<section class="${sec.v ? "verified" : ""}"><h2><span>${esc(title)}</span>
+      <span class="right"><span>${done}/${rows.length} reviewed</span></span></h2>`;
+    vis.forEach(i => {
+      const id = i[1], s = st(id), files = FILES[id] || [];
+      const name = i[3]
+        ? `<div class="name-line"><input class="name-edit" data-nid="${esc(id)}" value="${esc(nm(i))}" title="Click to rename" ${locked ? "disabled" : ""}>
+             ${i[4] && !locked ? `<button class="link muted" data-remove="${esc(id)}">Remove</button>` : ""}</div>`
+        : `<div class="name">${esc(i[2])}</div>`;
+      html += `<div class="row ${s} ${locked ? "locked" : ""}">
+        <div class="code">${esc(id)}</div>
+        <div>${name}
+          <div class="files">
+            ${files.map(fl => `<span class="file"><span class="ext">${esc(extOf(fl.name))}</span>
+               <a data-open="${fl.id}" title="${esc(fl.name)}">${esc(fl.name)}</a>
+               ${locked ? "" : `<button data-del="${fl.id}" data-item="${esc(id)}" data-dname="${esc(fl.name)}" title="Remove file">×</button>`}</span>`).join("")}
+            ${locked ? "" : `<button class="attach" data-attach="${esc(id)}">+ Attach .pdf / .docx</button>`}
+          </div>
+        </div>
+        <div class="ctl">
+          <select data-id="${esc(id)}" ${locked ? "disabled" : ""}>
+            <option value="pending" disabled ${s==="pending"?"selected":""}>Please select</option>
+            ${["complete","missing","na"].map(v => `<option value="${v}" ${v===s?"selected":""}>${LABEL[v]}</option>`).join("")}
+          </select>
+          ${commentHTML(id, locked)}
+        </div>
+      </div>`;
+      if (id === lastOther && !locked) html += `<div class="add-row"><button class="attach" id="addOther">+ Add other form</button></div>`;
+    });
+    if (g !== "C") html += `<div class="sec-foot"><span>${done}/${rows.length} reviewed${esc(secRecord(sec))}</span>${check}</div>`;
+    html += `</section>`;
+  });
+  list.innerHTML = shown ? html : `<div class="empty">No documents match this filter.</div>`;
+  renderStats();
+}
+
+/* ---------- events ---------- */
+const picker = document.createElement("input");
+picker.type = "file"; picker.multiple = true;
+picker.accept = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+picker.addEventListener("change", () => { if (picker.files.length) addFiles(picker.dataset.item, [...picker.files]); picker.value = ""; });
+
+function saveComment(id){
+  const el = list.querySelector(`[data-cid="${CSS.escape(id)}"]`);
+  const v = (el ? el.value : "").trim();
+  const old = cm(id);
+  if (!v && !old) return;
+  if (v === old) { EDIT.delete(id); delete DRAFT[id]; render(); return; }
+  if (!confirm(v ? `Do you confirm this comment for ${id}?\n\n"${v}"` : `Remove the comment for ${id}?`)) return;
+  item(id).c = v; EDIT.delete(id); delete DRAFT[id]; save(); render();
+}
+
+list.addEventListener("change", e => {
+  const id = e.target.dataset.id; if (!id) return;
+  if (isLocked(groupOf(id))) { render(); return; }
+  item(id).s = e.target.value; save(); render();
+});
+list.addEventListener("input", e => {
+  if (e.target.dataset.cid) DRAFT[e.target.dataset.cid] = e.target.value;
+  if (e.target.dataset.nid && !isLocked(groupOf(e.target.dataset.nid))) { item(e.target.dataset.nid).n = e.target.value; saveSoon(); }
+});
+list.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.dataset.cid) { e.preventDefault(); saveComment(e.target.dataset.cid); }
+});
+list.addEventListener("click", async e => {
+  if (e.target.id === "addOther") {
+    if (isLocked("14")) return;
+    const id = newCustomId();
+    state.custom.push({id});
+    item(id).n = `Other List / Form (${state.custom.length + 2})`;
+    save(); render();
+    const el = list.querySelector(`[data-nid="${CSS.escape(id)}"]`); if (el) { el.focus(); el.select(); }
+    return;
+  }
+  const t = e.target.closest("[data-sec],[data-secedit],[data-attach],[data-open],[data-del],[data-csave],[data-cedit],[data-ccancel],[data-remove]");
+  if (!t) return;
+  const d = t.dataset;
+  const target = d.attach || d.item || d.csave || d.cedit || d.remove;
+  if (target && isLocked(groupOf(target))) { render(); return; }
+  if (d.sec){
+    const g = d.sec, sec = state.sections[g] || (state.sections[g] = {});
+    if (sec.v) return;
+    const gi = groupItems(g);
+    const pend = gi.filter(i => st(i[1]) === "pending").length;
+    const miss = gi.filter(i => st(i[1]) === "missing").length;
+    const warn = [pend ? `${pend} document(s) have no status selected` : "", miss ? `${miss} document(s) are marked Missing` : ""].filter(Boolean).join(" and ");
+    const msg = warn
+      ? `${warn}. Check and lock the section anyway?`
+      : "Check this section? It will be locked until you choose Edit.";
+    if (!confirm(msg)) return;
+    sec.v = true; sec.t = Date.now(); logSec(sec, "checked");
+    save(); render();
+  }
+  if (d.secedit){
+    const sec = state.sections[d.secedit]; if (!sec || !sec.v) return;
+    if (!confirm("Unlock this section for editing? It will need to be checked again.")) return;
+    sec.v = false; sec.e = Date.now(); logSec(sec, "edited");
+    save(); render();
+  }
+  if (d.attach) { picker.dataset.item = d.attach; picker.click(); }
+  if (d.open) openFile(+d.open);
+  if (d.del) deleteFile(+d.del, d.dname);
+  if (d.csave) saveComment(d.csave);
+  if (d.cedit) { EDIT.add(d.cedit); render(); const el = list.querySelector(`[data-cid="${CSS.escape(d.cedit)}"]`); if (el) el.focus(); }
+  if (d.ccancel) { EDIT.delete(d.ccancel); delete DRAFT[d.ccancel]; render(); }
+  if (d.remove) {
+    const id = d.remove;
+    if (!confirm(`Remove "${nm(allItems().find(i => i[1] === id))}" and its attached files?`)) return;
+    if (db) for (const f of (FILES[id] || [])) await P(store('readwrite').delete(f.id));
+    state.custom = state.custom.filter(c => c.id !== id); delete state.items[id];
+    save(); await loadFiles(); render();
+  }
+});
+filter.addEventListener("change", render);
+document.getElementById("q").addEventListener("input", render);
+
+/* ---------- print ---------- */
+function buildPrint(){
+  const m = state.meta, c = renderStats();
+  const v = k => esc(m[k] || "");
+  let h = `<div class="p-head"><div class="p-title">Trial Master File Control List</div>
+    <div class="p-sub">Printed ${esc(new Date().toLocaleString())}</div></div>
+  <table class="p p-meta">
+    <tr><td class="k">Study title</td><td class="v">${v("study")}</td><td class="k">Protocol no.</td><td class="v">${v("protocol")}</td></tr>
+    <tr><td class="k">Site code</td><td class="v">${v("clinic")}</td><td class="k">Reviewed by</td><td class="v">${v("controller")}</td></tr>
+    <tr><td class="k">Review start</td><td class="v">${v("start")}</td><td class="k">Review end</td><td class="v">${v("end")}</td></tr>
+  </table>
+  <p class="p-sum">Documents: ${c.items} · Complete: ${c.ok} · Missing: ${c.miss} · N/A: ${c.na} · Not selected: ${c.pend} · Sections checked: ${c.secDone}/${c.secs}</p>
+  <table class="p">
+    <colgroup><col style="width:8%"><col style="width:35%"><col style="width:10%"><col style="width:30%"><col style="width:17%"></colgroup>
+    <thead><tr><th>Code</th><th>Document</th><th>Status</th><th>Comment</th><th>Attachments</th></tr></thead><tbody>`;
+  GROUPS.forEach(([g, title]) => {
+    const sec = state.sections[g] || {};
+    const n = editCount(sec);
+    const chk = g === "C" ? "" : (sec.v ? `☑ Checked ${esc(fmt(sec.t))}` : "☐ Not checked")
+      + (n ? ` · edited ${n}× (last ${esc(fmt(sec.e))})` : "");
+    h += `<tr class="p-sec"><td colspan="5">${esc(title)}<span class="chk">${chk}</span></td></tr>`;
+    groupItems(g).forEach(i => {
+      const id = i[1], s = st(id), files = FILES[id] || [];
+      h += `<tr><td class="p-code">${esc(id)}</td><td>${esc(nm(i))}</td>
+        <td class="p-st ${s}">${s === "pending" ? "—" : LABEL[s]}</td><td class="p-cm">${esc(cm(id)) || ""}</td>
+        <td class="p-files">${files.map(f => esc(f.name)).join("<br>")}</td></tr>`;
+    });
+  });
+  h += `</tbody></table>
+  <div class="p-block"><h3>General comments</h3><div class="p-notes">${esc(m.notes || "")}</div></div>
+  <div class="p-block"><h3>Sign-off</h3>
+    <table class="p p-sign"><thead><tr><th style="width:30%">Role</th><th style="width:25%">Name</th><th style="width:20%">Date / Time</th><th style="width:25%">Signature</th></tr></thead>
+    <tbody><tr><td>Reviewed by</td><td>${v("controller")}</td><td></td><td></td></tr>
+    <tr><td>Project lead</td><td></td><td></td><td></td></tr></tbody></table></div>`;
+  document.getElementById("print").innerHTML = h;
+}
+window.addEventListener("beforeprint", buildPrint);
+printBtn.addEventListener("click", () => { buildPrint(); window.print(); });
+
+/* ---------- export / import / reset ---------- */
+function toDataURL(blob){ return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); }); }
+function fromDataURL(u){
+  const [h, b] = u.split(','); const mime = (h.match(/:(.*?);/) || [])[1] || '';
+  const bin = atob(b); const arr = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+  return new Blob([arr], {type:mime});
+}
+exportBtn.addEventListener("click", async () => {
+  const out = {version:3, exported:new Date().toISOString(), state, files:[]};
+  if (db) {
+    const all = await P(store('readonly').getAll());
+    for (const f of all) out.files.push({itemId:f.itemId, name:f.name, type:f.type, added:f.added, data:await toDataURL(f.blob)});
+  }
+  const name = (state.meta.protocol || "tmf").replace(/[^\w-]+/g, "_");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out)], {type:"application/json"}));
+  a.download = `trial-master-file-${name}-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+});
+importBtn.addEventListener("click", () => importFile.click());
+importFile.addEventListener("change", e => {
+  const file = e.target.files[0]; if (!file) return;
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const data = JSON.parse(fr.result);
+      const s = data.state || data;
+      if (!s.items) throw 0;
+      if (!confirm("Importing will replace the current review and its attached files. Continue?")) return;
+      state = norm(s); save();
+      if (db) {
+        await P(store('readwrite').clear());
+        for (const f of (data.files || [])) await P(store('readwrite').add({itemId:f.itemId, name:f.name, type:f.type, added:f.added, blob:fromDataURL(f.data)}));
+        await loadFiles();
+      }
+      EDIT.clear(); renderMeta(); renderNotes(); render();
+    } catch(err){ alert("Could not read this file. Please choose a JSON exported from this control list."); }
+    importFile.value = "";
+  };
+  fr.readAsText(file);
+});
+resetBtn.addEventListener("click", async () => {
+  if (!confirm("Study details, statuses, comments, general comments and section checks will all be cleared. Continue?")) return;
+  const keep = {};
+  allItems().filter(i => i[3]).forEach(i => { const n = state.items[i[1]] && state.items[i[1]].n; if (n) keep[i[1]] = {s:"pending", n}; });
+  state = norm({custom:state.custom, items:keep});
+  save();
+  if (db && confirm("Also delete all attached files?")) { await P(store('readwrite').clear()); await loadFiles(); }
+  EDIT.clear(); notesEditing = false; notesDraft = null;
+  renderMeta(); renderNotes(); render();
+});
+
+/* ---------- init ---------- */
+(async () => {
+  try { db = await openDB(); await loadFiles(); }
+  catch(e){ db = null; storageNote.textContent = "File attachments are not available in this browser. Statuses and comments are still saved."; }
+  renderMeta(); renderNotes(); render();
+})();
+</script>
+</body>
+</html>

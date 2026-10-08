@@ -1,0 +1,12 @@
+# Review exports and study documents must never be committed:
+# they may contain personal subject data.
+*.json
+*.pdf
+*.docx
+*.zip
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
