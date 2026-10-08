@@ -2,9 +2,14 @@
 
 A **Trial Master File (TMF)** control list for bioequivalence (BE) and bioavailability (BA) studies. It is a single HTML file: no server, no installation, no build step.
 
+**▶ Use online:** https://mehmetsahin-tr.github.io/trial-master-file-control-list/
+
+The online version runs entirely in your browser. Nothing you enter or attach is uploaded to GitHub or any server; it stays on your own computer. You can also download `trial-master-file-control-list.html` and open it offline.
+
 ## Files
 
 - `trial-master-file-control-list.html` – the control list (open in a browser)
+- `index.html` – redirects the GitHub Pages address to the control list
 - `README.md` – this file
 - `LICENSE` – MIT license
 
@@ -24,7 +29,7 @@ A **Trial Master File (TMF)** control list for bioequivalence (BE) and bioavaila
 
 ## Usage
 
-1. Open the file in a modern browser (Chrome, Edge or Firefox recommended).
+1. Open the online version, or the downloaded file, in a modern browser (Chrome, Edge or Firefox recommended).
 2. Fill in the study details and click **Save details**.
 3. For each document, change **Please select** to **Complete**, **Missing** or **N/A** (not applicable to the study).
 4. Type a comment and click **Save** (or press Enter); confirm it in the dialog. Use **Edit** to change it later.
